@@ -1,0 +1,19 @@
+schema_version: 20180708
+name: fusion-rest-api-proxy
+version: 1.0.4
+runtime: python3.12
+build_image: docker.io/fnproject/python:3.12-dev
+run_image: docker.io/fnproject/python:3.12
+entrypoint: /python/bin/fdk /function/func.py handler
+memory: 256
+timeout: 300
+config:
+  JWT_AUDIENCE: ""
+  JWT_CLIENT_ID: ""
+  JWT_CLIENT_SECRET_OCID: ""
+  JWT_ISSUER: ""
+  JWT_KID: ""
+  JWT_SCOPE: ""
+  OCI_IAM_BASE_URL: ""
+  PRIVATE_KEY_OCID: ""
+  PRIVATE_KEY_PP_OCID: ""
