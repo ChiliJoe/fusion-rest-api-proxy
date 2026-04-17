@@ -148,6 +148,7 @@ def get_backend_token(
     key_password: str,
     user_principal: str,
     kid: str,
+    issuer: str,
 ) -> str:
     """
     Obtain a backend OAuth access token from OCI IAM via the JWT bearer grant.
@@ -162,13 +163,15 @@ def get_backend_token(
     Args:
         iam_base_url (str): OCI_IAM_BASE_URL config value, e.g.
             "https://idcs-GUID.identity.oraclecloud.com:443".
-        client_id (str): JWT_ISSUER config — the confidential app client ID.
+        client_id (str): JWT_CLIENT_ID config — the confidential app client ID used
+            for HTTP Basic Auth against the token endpoint.
         client_secret (str): JWT_CLIENT_SECRET config.
         scope (str): JWT_SCOPE config.
         private_key_pem (str): PEM private key retrieved from Vault.
         key_password (str): Key passphrase retrieved from Vault.
         user_principal (str): Username from the x-username request header.
-        kid (str): Key ID — same value as client_id / JWT_ISSUER.
+        kid (str): Key ID for the JWT header (JWT_KID config).
+        issuer (str): JWT_ISSUER config — the iss claim in the user-assertion JWT.
 
     Returns:
         str: The access_token string from the IAM token response.
@@ -183,7 +186,7 @@ def get_backend_token(
     user_assertion = create_jwt_token(
         private_key_pem=private_key_pem,
         key_password=key_password,
-        issuer=client_id,
+        issuer=issuer,
         principal=user_principal,
         audience=iam_base_url,
         scope=scope,

@@ -108,6 +108,7 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
             key_password=key_passphrase,
             user_principal=user_principal,
             kid=cfg["JWT_KID"],
+            issuer=jwt_issuer,
         )
 
         # --- Build the final backend URL (merge query params) ---
