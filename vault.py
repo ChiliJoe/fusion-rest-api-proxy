@@ -51,4 +51,11 @@ def get_secret(secret_ocid: str) -> str:
     # bundle.data.secret_bundle_content.content is the base64-encoded secret value
     # for the default BASE64_SECRET_BUNDLE content type.
     encoded_content = bundle.data.secret_bundle_content.content
-    return base64.b64decode(encoded_content).decode("utf-8")
+    secret_value = base64.b64decode(encoded_content).decode("utf-8")
+    logger.debug(
+        "Vault secret retrieved: ocid=%s  version=%s  length=%d",
+        secret_ocid,
+        bundle.data.version_number,
+        len(secret_value),
+    )
+    return secret_value

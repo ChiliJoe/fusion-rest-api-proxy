@@ -65,6 +65,9 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
     """
     try:
         cfg = dict(ctx.Config())
+        log_level = getattr(logging, cfg.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
+        logging.getLogger().setLevel(log_level)
+        logger.debug("Config parameters: %s", cfg)
         headers = dict(ctx.Headers())
 
         # --- Input validation ---
@@ -91,12 +94,17 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
         target_endpoint = _header("x-target-endpoint")
         host_header = headers.get("host", [])
 
+        logger.debug("Request: %s %s", ctx.Method(), ctx.RequestURL())
+        logger.debug("Request header keys: %s", sorted(headers.keys()))
+        logger.debug("user_principal=%s  target_endpoint=%s", user_principal, target_endpoint)
+
         # --- Retrieve secrets from OCI Vault ---
         private_key_pem = get_secret(cfg["PRIVATE_KEY_OCID"])
         key_passphrase = get_secret(cfg["PRIVATE_KEY_PP_OCID"])
         client_secret = get_secret(cfg["JWT_CLIENT_SECRET_OCID"])
 
         jwt_issuer = cfg.get("JWT_ISSUER", "").strip() or _DEFAULT_JWT_ISSUER
+        logger.debug("Resolved jwt_issuer=%s", jwt_issuer)
 
         # --- Exchange JWT user-assertion for backend access token ---
         access_token = get_backend_token(
@@ -126,6 +134,10 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
 
         # --- Rewrite URLs in the response body ---
         resp_content_type = backend_resp.headers.get("Content-Type", "")
+        logger.debug(
+            "Backend response: HTTP %d  Content-Type=%s  body=%d bytes",
+            backend_resp.status_code, resp_content_type, len(backend_resp.content),
+        )
         if is_text_response(resp_content_type):
             backend_base_url, frontend_base_url = compute_url_rewrite_params(
                 target_endpoint=target_endpoint,
@@ -133,15 +145,18 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
                 host_header=host_header,
             )
             if backend_base_url and frontend_base_url:
+                rewrite_count = backend_resp.text.count(backend_base_url)
+                logger.debug("URL rewrite applied: %d occurrence(s) replaced", rewrite_count)
                 resp_body = rewrite_urls(
                     backend_resp.text,
                     backend_base_url,
                     frontend_base_url,
                 )
             else:
+                logger.debug("URL rewrite skipped: no usable frontend host")
                 resp_body = backend_resp.text
         else:
-            # Binary response — return raw bytes, no rewriting
+            logger.debug("URL rewrite skipped: binary Content-Type")
             resp_body = backend_resp.content
 
         # --- Forward the response back to the API Gateway ---

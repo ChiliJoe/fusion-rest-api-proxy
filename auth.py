@@ -128,6 +128,9 @@ def create_jwt_token(
         "kid": kid,
     }
 
+    logger.debug("JWT payload claims: %s", payload)
+    logger.debug("JWT header: %s", headers)
+
     token = jwt.encode(
         payload=payload,
         key=private_key,
@@ -135,7 +138,8 @@ def create_jwt_token(
         headers=headers,
     )
 
-    logger.debug("JWT user-assertion created for principal: %s", principal)
+    logger.info("JWT user-assertion created for principal: %s", principal)
+    logger.debug("JWT user-assertion token: %s", token)
     return token
 
 
@@ -194,6 +198,7 @@ def get_backend_token(
     )
 
     token_endpoint = f"{iam_base_url.rstrip('/')}/oauth2/v1/token"
+    logger.debug("IAM token endpoint: %s", token_endpoint)
 
     resp = requests.post(
         url=token_endpoint,
@@ -207,6 +212,7 @@ def get_backend_token(
         timeout=30,
     )
 
+    logger.debug("IAM token response: HTTP %d", resp.status_code)
     resp.raise_for_status()
 
     token_data = resp.json()
@@ -216,5 +222,8 @@ def get_backend_token(
             f"IAM token response missing access_token. Response: {resp.text}"
         )
 
-    logger.debug("IAM backend token retrieved successfully")
+    logger.debug(
+        "IAM token retrieved: token_type=%s  expires_in=%s",
+        token_data.get("token_type"), token_data.get("expires_in"),
+    )
     return access_token

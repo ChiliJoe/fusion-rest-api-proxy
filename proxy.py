@@ -133,6 +133,8 @@ def proxy_request(
     forward_headers["Authorization"] = f"Bearer {access_token}"
     forward_headers["Accept"] = "application/json"
 
+    logger.debug("Forwarded header keys: %s", sorted(forward_headers.keys()))
+    logger.debug("Request body size: %d bytes", len(body) if body else 0)
     logger.info("Proxying %s %s", method.upper(), target_url)
 
     return requests.request(
