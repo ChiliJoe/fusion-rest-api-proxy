@@ -41,8 +41,6 @@ def main() -> None:
                         help="JWT audience — Fusion tenant base URL (JWT_AUDIENCE)")
     parser.add_argument("--kid", required=True, metavar="KEY_ID",
                         help="Key ID for the JWT header")
-    parser.add_argument("--scope", default="/", metavar="SCOPE",
-                        help="OAuth scope (default: /)")
 
     args = parser.parse_args()
 
@@ -61,7 +59,6 @@ def main() -> None:
             issuer=args.issuer,
             principal=args.username,
             audience=args.audience,
-            scope=args.scope,
             kid=args.kid,
         )
     except Exception as e:

@@ -69,7 +69,6 @@ def create_jwt_token(
     issuer: str,
     principal: str,
     audience: str,
-    scope: str,
     kid: str,
     expiry_minutes: int = 60,
 ) -> str:
@@ -80,7 +79,6 @@ def create_jwt_token(
         sub   — end-user principal (x-username header value)
         iss   — confidential app client_id (JWT_ISSUER config)
         aud   — JWT audience (JWT_AUDIENCE config)
-        scope — OAuth scope (JWT_SCOPE config)
         jti   — unique UUID4 to prevent token replay
         iat   — issued-at Unix timestamp
         exp   — expiry Unix timestamp
@@ -96,7 +94,6 @@ def create_jwt_token(
         issuer (str): JWT_ISSUER config value (also used as kid).
         principal (str): Subject claim — the value of the x-username header.
         audience (str): JWT_AUDIENCE config value.
-        scope (str): JWT_SCOPE config value.
         kid (str): Key ID for the JWT header — should equal issuer.
         expiry_minutes (int): Token lifetime in minutes (default 60).
 
@@ -118,8 +115,7 @@ def create_jwt_token(
         "iat": _get_unix_timestamp(current_time),
         "exp": _get_unix_timestamp(expiry_time),
         "iss": issuer,
-        "aud": audience,
-        "scope": scope,
+        "aud": audience
     }
 
     headers = {
@@ -170,7 +166,7 @@ def get_backend_token(
         client_id (str): JWT_CLIENT_ID config — the confidential app client ID used
             for HTTP Basic Auth against the token endpoint.
         client_secret (str): JWT_CLIENT_SECRET config.
-        scope (str): JWT_SCOPE config.
+        scope (str): TARGET_SCOPE config.
         private_key_pem (str): PEM private key retrieved from Vault.
         key_password (str): Key passphrase retrieved from Vault.
         user_principal (str): Username from the x-username request header.
@@ -193,7 +189,6 @@ def get_backend_token(
         issuer=issuer,
         principal=user_principal,
         audience=iam_base_url,
-        scope=scope,
         kid=kid,
     )
 

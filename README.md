@@ -107,10 +107,10 @@ Set these values on the function after deployment. All parameters are required.
 | Parameter | Description | Example |
 |-----------|-------------|---------|
 | `JWT_CLIENT_ID` | OCI IAM Confidential App Client ID — used for HTTP Basic Auth in the token exchange | `some_client_id` |
-| `JWT_ISSUER` | *(optional)* JWT `iss` claim. Defaults to `https://identity.oraclecloud.com/` - this is the default issuer if using Fusion IAM | `https://identity.oraclecloud.com/` |
+| `JWT_ISSUER` | *(optional)* JWT `iss` claim. Specific to Fusion IAM. Defaults to `https://identity.oraclecloud.com/` | `https://identity.oraclecloud.com/` |
 | `JWT_KID` | Key ID placed in the JWT `kid` header — identifies the signing key registered in OCI IAM | `my-signing-key-1` |
-| `JWT_AUDIENCE` | JWT `aud` claim value — typically the Fusion tenant base URL | `https://xxxx.fa.us2.oraclecloud.com` |
-| `JWT_SCOPE` | OAuth scope requested in the token exchange | `/` |
+| `JWT_AUDIENCE` | *(optional)* JWT `aud` claim value. Specific to Fusion IAM. Defaults to `https://identity.oraclecloud.com/` | `https://identity.oraclecloud.com/` |
+| `TARGET_SCOPE` | OAuth scope requested in the token exchange — the Fusion tenant base URL | `https://xxxx.fa.us2.oraclecloud.com/` |
 | `JWT_CLIENT_SECRET_OCID` | OCID of the Vault secret containing the OCI IAM Confidential App Client Secret | `ocid1.vaultsecret.oc1...` |
 | `OCI_IAM_BASE_URL` | OCI IAM tenant base URL | `https://idcs-abc123.identity.oraclecloud.com:443` |
 | `PRIVATE_KEY_OCID` | OCID of the Vault secret containing the RSA private key PEM | `ocid1.vaultsecret.oc1...` |
@@ -154,7 +154,7 @@ fn config function $APP $FN JWT_CLIENT_ID            "<client-id>"
 fn config function $APP $FN JWT_ISSUER              "<issuer>"
 fn config function $APP $FN JWT_KID                 "<key-id>"
 fn config function $APP $FN JWT_AUDIENCE             "<iam-base-url>"
-fn config function $APP $FN JWT_SCOPE               "<scope>"
+fn config function $APP $FN TARGET_SCOPE            "<scope>"
 fn config function $APP $FN JWT_CLIENT_SECRET_OCID  "<vault-secret-ocid>"
 fn config function $APP $FN OCI_IAM_BASE_URL        "<iam-base-url>"
 fn config function $APP $FN PRIVATE_KEY_OCID        "<vault-secret-ocid>"

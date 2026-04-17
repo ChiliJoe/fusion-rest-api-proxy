@@ -45,8 +45,8 @@ def main() -> None:
                         help="OCI IAM base URL (OCI_IAM_BASE_URL), e.g. https://idcs-<guid>.identity.oraclecloud.com:443")
     parser.add_argument("--kid", required=True, metavar="KEY_ID",
                         help="Key ID for the JWT header")
-    parser.add_argument("--scope", default="/", metavar="SCOPE",
-                        help="OAuth scope (default: /)")
+    parser.add_argument("--scope", required=True, metavar="SCOPE",
+                        help="OAuth scope (TARGET_SCOPE)")
 
     args = parser.parse_args()
 

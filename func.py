@@ -34,8 +34,7 @@ logger = logging.getLogger(__name__)
 _REQUIRED_CONFIG = (
     "JWT_CLIENT_ID",
     "JWT_KID",
-    "JWT_AUDIENCE",
-    "JWT_SCOPE",
+    "TARGET_SCOPE",
     "JWT_CLIENT_SECRET_OCID",
     "OCI_IAM_BASE_URL",
     "PRIVATE_KEY_OCID",
@@ -43,6 +42,7 @@ _REQUIRED_CONFIG = (
 )
 
 _DEFAULT_JWT_ISSUER = "https://identity.oraclecloud.com/"
+_DEFAULT_JWT_AUDIENCE = "https://identity.oraclecloud.com/"
 
 # Request headers that must be present
 _REQUIRED_HEADERS = ("x-username", "x-target-endpoint")
@@ -104,14 +104,15 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
         client_secret = get_secret(cfg["JWT_CLIENT_SECRET_OCID"])
 
         jwt_issuer = cfg.get("JWT_ISSUER", "").strip() or _DEFAULT_JWT_ISSUER
-        logger.debug("Resolved jwt_issuer=%s", jwt_issuer)
+        jwt_audience = cfg.get("JWT_AUDIENCE", "").strip() or _DEFAULT_JWT_AUDIENCE
+        logger.debug("Resolved jwt_issuer=%s  jwt_audience=%s", jwt_issuer, jwt_audience)
 
         # --- Exchange JWT user-assertion for backend access token ---
         access_token = get_backend_token(
             iam_base_url=cfg["OCI_IAM_BASE_URL"],
             client_id=cfg["JWT_CLIENT_ID"],
             client_secret=client_secret,
-            scope=cfg["JWT_SCOPE"],
+            scope=cfg["TARGET_SCOPE"],
             private_key_pem=private_key_pem,
             key_password=key_passphrase,
             user_principal=user_principal,

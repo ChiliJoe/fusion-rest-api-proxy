@@ -8,12 +8,12 @@ entrypoint: /python/bin/fdk /function/func.py handler
 memory: 256
 timeout: 300
 config:
-  JWT_AUDIENCE: ""
+  JWT_AUDIENCE: "https://identity.oraclecloud.com/"
   JWT_CLIENT_ID: ""
   JWT_CLIENT_SECRET_OCID: ""
-  JWT_ISSUER: ""
+  JWT_ISSUER: "https://identity.oraclecloud.com/"
   JWT_KID: ""
-  JWT_SCOPE: ""
+  TARGET_SCOPE: ""
   OCI_IAM_BASE_URL: ""
   PRIVATE_KEY_OCID: ""
   PRIVATE_KEY_PP_OCID: ""
