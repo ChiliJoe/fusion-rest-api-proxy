@@ -113,6 +113,7 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
             client_id=cfg["JWT_CLIENT_ID"],
             client_secret=client_secret,
             scope=cfg["TARGET_SCOPE"],
+            audience=jwt_audience,
             private_key_pem=private_key_pem,
             key_password=key_passphrase,
             user_principal=user_principal,

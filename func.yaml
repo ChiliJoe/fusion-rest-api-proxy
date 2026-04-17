@@ -1,6 +1,6 @@
 schema_version: 20180708
 name: fusion-rest-api-proxy
-version: 1.0.4
+version: 0.0.3
 runtime: python3.12
 build_image: docker.io/fnproject/python:3.12-dev
 run_image: docker.io/fnproject/python:3.12
@@ -8,13 +8,13 @@ entrypoint: /python/bin/fdk /function/func.py handler
 memory: 256
 timeout: 300
 config:
-  JWT_AUDIENCE: "https://identity.oraclecloud.com/"
+  JWT_AUDIENCE: https://identity.oraclecloud.com/
   JWT_CLIENT_ID: ""
   JWT_CLIENT_SECRET_OCID: ""
-  JWT_ISSUER: "https://identity.oraclecloud.com/"
+  JWT_ISSUER: https://identity.oraclecloud.com/
   JWT_KID: ""
-  TARGET_SCOPE: ""
+  LOG_LEVEL: ""
   OCI_IAM_BASE_URL: ""
   PRIVATE_KEY_OCID: ""
   PRIVATE_KEY_PP_OCID: ""
-  LOG_LEVEL: ""
+  TARGET_SCOPE: ""

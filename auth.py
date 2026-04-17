@@ -144,6 +144,7 @@ def get_backend_token(
     client_id: str,
     client_secret: str,
     scope: str,
+    audience: str,
     private_key_pem: str,
     key_password: str,
     user_principal: str,
@@ -167,6 +168,7 @@ def get_backend_token(
             for HTTP Basic Auth against the token endpoint.
         client_secret (str): JWT_CLIENT_SECRET config.
         scope (str): TARGET_SCOPE config.
+        audience (str): JWT_AUDIENCE config value for the JWT aud claim.
         private_key_pem (str): PEM private key retrieved from Vault.
         key_password (str): Key passphrase retrieved from Vault.
         user_principal (str): Username from the x-username request header.
@@ -188,7 +190,7 @@ def get_backend_token(
         key_password=key_password,
         issuer=issuer,
         principal=user_principal,
-        audience=iam_base_url,
+        audience=audience,
         kid=kid,
     )
 
