@@ -9,8 +9,8 @@ Every invocation makes 3 sequential Vault HTTP round-trips (`PRIVATE_KEY_OCID`,
 `PRIVATE_KEY_PP_OCID`, `JWT_CLIENT_SECRET_OCID`). Each call also instantiates a
 new Resource Principal signer and `SecretsClient`.
 
-- [ ] Cache secrets at module level with a TTL (e.g. 5–10 minutes)
-- [ ] Fetch all 3 concurrently with `concurrent.futures.ThreadPoolExecutor`
+- [x] Cache secrets at module level with a TTL (e.g. 5–10 minutes)
+- [x] Fetch all 3 concurrently with `concurrent.futures.ThreadPoolExecutor`
 
 ### 2. Cache deserialized private key
 **File:** `auth.py` — `load_private_key()`
@@ -18,7 +18,7 @@ new Resource Principal signer and `SecretsClient`.
 PEM decryption and PKCS8 re-serialization (CPU-intensive) runs on every request
 even though the key and passphrase don't change between warm starts.
 
-- [ ] Cache the deserialized key bytes alongside the Vault secret cache
+- [x] Cache the deserialized key bytes alongside the Vault secret cache
 
 ## Medium Impact
 
@@ -29,7 +29,7 @@ Full JWT sign + HTTP POST to the IAM token endpoint on every request. Redundant
 when the same `x-username` makes multiple requests within the token's
 `expires_in` window.
 
-- [ ] Add an LRU cache keyed on `user_principal` with expiry from `expires_in`
+- [x] Add an LRU cache keyed on `user_principal` with expiry from `expires_in`
 
 ### 4. Remove redundant full-body scan for debug logging
 **File:** `func.py` (lines 152–153)
@@ -37,7 +37,7 @@ when the same `x-username` makes multiple requests within the token's
 `.count()` scans the entire response body for a debug log, then `rewrite_urls()`
 scans it again — doubling string traversal cost on large responses.
 
-- [ ] Remove the `.count()` call or derive the count from the rewrite result
+- [x] Remove the `.count()` call or derive the count from the rewrite result
 
 ## Low Impact
 
@@ -47,7 +47,7 @@ scans it again — doubling string traversal cost on large responses.
 `get_resource_principals_signer()` is called 3 times per invocation. Safe to
 reuse within a single synchronous handler call.
 
-- [ ] Create the signer once in `handler()` and pass it to all `get_secret()` calls
+- [x] Create the signer once in `handler()` and pass it to all `get_secret()` calls
 
 ### 6. Consider increasing memory limit
 **File:** `func.yaml`

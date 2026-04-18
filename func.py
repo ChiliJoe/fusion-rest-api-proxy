@@ -25,7 +25,7 @@ from proxy import (
     proxy_request,
     rewrite_urls,
 )
-from vault import get_secret
+from vault import get_secrets_concurrent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,9 +99,11 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
         logger.debug("user_principal=%s  target_endpoint=%s", user_principal, target_endpoint)
 
         # --- Retrieve secrets from OCI Vault ---
-        private_key_pem = get_secret(cfg["PRIVATE_KEY_OCID"])
-        key_passphrase = get_secret(cfg["PRIVATE_KEY_PP_OCID"])
-        client_secret = get_secret(cfg["JWT_CLIENT_SECRET_OCID"])
+        private_key_pem, key_passphrase, client_secret = get_secrets_concurrent([
+            cfg["PRIVATE_KEY_OCID"],
+            cfg["PRIVATE_KEY_PP_OCID"],
+            cfg["JWT_CLIENT_SECRET_OCID"],
+        ])
 
         jwt_issuer = cfg.get("JWT_ISSUER", "").strip() or _DEFAULT_JWT_ISSUER
         jwt_audience = cfg.get("JWT_AUDIENCE", "").strip() or _DEFAULT_JWT_AUDIENCE
@@ -147,13 +149,12 @@ def handler(ctx, data: io.BytesIO = None) -> response.Response:
                 host_header=host_header,
             )
             if backend_base_url and frontend_base_url:
-                rewrite_count = backend_resp.text.count(backend_base_url)
-                logger.debug("URL rewrite applied: %d occurrence(s) replaced", rewrite_count)
                 resp_body = rewrite_urls(
                     backend_resp.text,
                     backend_base_url,
                     frontend_base_url,
                 )
+                logger.debug("URL rewrite applied to response body")
             else:
                 logger.debug("URL rewrite skipped: no usable frontend host")
                 resp_body = backend_resp.text

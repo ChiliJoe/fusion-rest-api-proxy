@@ -136,6 +136,20 @@ The remaining ~126 MB of headroom covers response body buffering (Fusion paginat
 
 ---
 
+## Performance
+
+All optimisations target warm-start invocations. Cold starts are unaffected by caching but benefit from concurrent secret fetching.
+
+| Optimisation | Detail |
+|---|---|
+| **Vault secret caching** | `vault.py` maintains a module-level TTL cache (5-minute expiry). On warm starts all three Vault round-trips are skipped when the cache is warm; only cache-miss OCIDs trigger network calls. |
+| **Concurrent secret fetching** | `get_secrets_concurrent()` dispatches all cache-miss secrets in parallel via `ThreadPoolExecutor`. A single Resource Principal signer is created once and shared across all worker threads, avoiding redundant metadata endpoint calls. |
+| **Private key caching** | `auth.load_private_key()` caches the deserialized, unencrypted PKCS8 bytes at module level keyed on `(pem, passphrase)`. Repeated calls skip the CPU-bound PBKDF2 key-derivation and PEM decryption performed by `cryptography`. |
+| **Backend token caching** | `get_backend_token()` keeps a per-user LRU cache (max 256 entries) in an `OrderedDict`, keyed on `x-username`. A cached token is reused until `expires_in − 60 s` elapses, eliminating the JWT-bearer exchange and IAM round-trip on every warm request. |
+| **Removed redundant body scan** | An earlier `.count()` traversal of the full response body string (used to gate URL rewriting) was eliminated. URL rewriting is now driven solely by `is_text_response()` and the presence of rewrite parameters, removing a full O(n) string scan that duplicated work already done by `str.replace()`. |
+
+---
+
 ## Deployment
 
 ### 1. Deploy the function

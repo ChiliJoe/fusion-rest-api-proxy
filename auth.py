@@ -3,9 +3,10 @@ auth.py — JWT user-assertion creation and OCI IAM backend token exchange.
 """
 
 import calendar
-import json
 import logging
+import time
 import uuid
+from collections import OrderedDict
 from datetime import datetime, timedelta
 
 import jwt
@@ -15,6 +16,10 @@ from requests.auth import HTTPBasicAuth
 
 logger = logging.getLogger(__name__)
 
+_KEY_CACHE: dict[tuple[str, str], bytes] = {}
+_TOKEN_CACHE: OrderedDict[str, tuple[str, float]] = OrderedDict()
+_TOKEN_CACHE_MAX = 256
+
 
 def load_private_key(private_key_pem: str, password: str) -> bytes:
     """
@@ -22,6 +27,9 @@ def load_private_key(private_key_pem: str, password: str) -> bytes:
 
     Decrypts the key in-memory and returns unencrypted PKCS8 PEM bytes, which
     is the format PyJWT expects for RS256 signing.
+
+    Results are cached at module level so that repeated calls within the same
+    warm-start invocation avoid redundant CPU-bound key derivation work.
 
     Args:
         private_key_pem (str): PEM-encoded private key (may be passphrase-protected).
@@ -33,6 +41,11 @@ def load_private_key(private_key_pem: str, password: str) -> bytes:
     Raises:
         ValueError: If the key or passphrase is invalid.
     """
+    password_str = password if isinstance(password, str) else password.decode()
+    cache_key = (private_key_pem, password_str)
+    if cache_key in _KEY_CACHE:
+        return _KEY_CACHE[cache_key]
+
     if isinstance(password, str):
         password = password.encode()
 
@@ -41,11 +54,13 @@ def load_private_key(private_key_pem: str, password: str) -> bytes:
         password=password,
     )
 
-    return private_key.private_bytes(
+    result = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     )
+    _KEY_CACHE[cache_key] = result
+    return result
 
 
 def _get_unix_timestamp(dt: datetime) -> int:
@@ -185,6 +200,16 @@ def get_backend_token(
     """
     logger.info("Retrieving IAM backend token for principal: %s", user_principal)
 
+    now = time.monotonic()
+    cached_entry = _TOKEN_CACHE.get(user_principal)
+    if cached_entry:
+        token, expiry = cached_entry
+        if now < expiry:
+            _TOKEN_CACHE.move_to_end(user_principal)
+            logger.debug("Backend token cache hit for principal: %s", user_principal)
+            return token
+        del _TOKEN_CACHE[user_principal]
+
     user_assertion = create_jwt_token(
         private_key_pem=private_key_pem,
         key_password=key_password,
@@ -223,4 +248,10 @@ def get_backend_token(
         "IAM token retrieved: token_type=%s  expires_in=%s",
         token_data.get("token_type"), token_data.get("expires_in"),
     )
+
+    expires_in = int(token_data.get("expires_in", 3600))
+    _TOKEN_CACHE[user_principal] = (access_token, now + max(expires_in - 60, 0))
+    if len(_TOKEN_CACHE) > _TOKEN_CACHE_MAX:
+        _TOKEN_CACHE.popitem(last=False)
+
     return access_token
